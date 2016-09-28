@@ -34,10 +34,10 @@ states <- read_csv("data/states.csv")
 
 Please indicate
 
-* Who you collaborated with:
-* Roughly how much time you spent on this HW so far:
-* The URL of the RPubs published URL [here](https://www.nhl.com/).
-* What gave you the most trouble:
+* Who you collaborated with:Emily Goins
+* Roughly how much time you spent on this HW so far: 5 hours
+* The URL of the RPubs published URL [here](http://rpubs.com/acowap/HW1).
+* What gave you the most trouble:Getting the unique values of flight, and uploading to Git.
 * Any comments you have:
 
 
@@ -56,7 +56,26 @@ Using this plot, indicate describe the
 minutes tend to occur.
 
 ```{r, echo=FALSE, message=FALSE, fig.width=12, fig.height=6}
+library(tidyr)
+flights <- flights %>% mutate(delayed = ifelse(dep_delay > 30, "yes", "no")) %>% 
+  mutate(month_name = format(date, "%b")) %>% 
+  mutate(month = as.numeric(format(date, "%m")))
 
+flights_delay <- flights %>% group_by(date, delayed) %>% tally(sort=TRUE) %>%
+  filter(!is.na(delayed)) %>% 
+  spread(delayed,n) %>% mutate(total = no + yes) %>% mutate(p_delayed = yes/total * 100) 
+
+delay2 <- flights %>% select(date, month, month_name, carrier)
+
+delay_graph <- left_join(flights_delay, delay2, by="date") %>%  
+  mutate(season = ifelse(month == 12 | month == 1 | month == 2, "winter", 
+                         ifelse(month == 3 | month == 4 | month == 5, "spring", 
+                                ifelse(month == 6 | month == 7 | month ==8, "summer", "fall"))))
+
+ggplot(data = delay_graph, aes(x = date, y = p_delayed, color = season)) + geom_point() +
+  geom_smooth(se = FALSE) + 
+  labs(x = "Date", y = "Percentage of Flights Delayed", 
+       title = "Seasonality of Delayed Flights")
 ```
 
 
@@ -69,6 +88,17 @@ Some people prefer flying on older planes.  Even though they aren't as nice,
 they tend to have more room.  Which airlines should these people favor?
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
+planes_old <- full_join(planes, flights) %>% 
+  mutate(old = ifelse(year < 2000, "before2000", "after2000")) %>% group_by(carrier) 
+
+planes_dist <- planes_old %>% select(carrier, year, plane, old) %>% unique()
+
+planes_old2 <- planes_dist %>% filter(!is.na(year)) %>% 
+  summarize(avg_age = mean(year)) %>% arrange(avg_age) 
+
+ggplot(data = planes_old2, aes(x=carrier, y=avg_age)) + 
+  geom_point(size = 4, color = "cadetblue") + labs(x = "Airline", y = "Average Age of Plane", 
+                                                   title = "Average Age of Planes by Carrier")
 
 ```
 
@@ -86,6 +116,18 @@ path, but since it flew 299 times in 2013, it would be counted as 299 flights.
 
 ```{r, echo=FALSE, message=FALSE, fig.width=12, fig.height=6}
 
+SW <- full_join(flights, airports, by= c("dest" = "iata")) %>% filter(carrier == "WN")
+
+SW_path <- SW %>% select(flight, dest, state) %>% unique() %>% group_by(state) %>% 
+  tally(sort = TRUE) %>% arrange(desc(n))
+
+SW_flight <- SW %>% group_by(state) %>% tally(sort = TRUE) %>% arrange(desc(n))
+
+ggplot(data = SW_path, aes(x=state, y = n)) + geom_bar(stat = "identity") + 
+  labs(x = "Destination State", y = "Number of Flight Paths", 
+       title = "SouthWest Flight Paths from Houston")
+ggplot(data = SW_flight, aes(x=state, y = n)) + geom_bar(stat = "identity") +
+  labs(x = "State", y = "Number of Flights", title = "SouthWest Flights from Houston")
 ```
 
 
@@ -100,4 +142,15 @@ function from the `lubridate` package.
 
 ```{r, echo=FALSE, message=FALSE, fig.width=12, fig.height=6}
 
+flights_dest <- full_join(flights, airports, by = c("dest" = "iata")) 
+flights_july <- full_join(flights_dest, states) %>% filter(month == 7) 
+
+flights_july <- flights_july %>% group_by(region, carrier) %>% tally(sort = TRUE) %>% 
+  filter(!is.na(region))
+
+ggplot(data = flights_july, aes(x = carrier, y = n, fill = region)) + 
+  geom_bar(stat = "identity", position = "fill") + 
+  labs(x= "Airline", y = "Percentage of Flights in July",
+         title = "Destination Regions from Houston in July")
+    
 ```
