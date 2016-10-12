@@ -91,7 +91,7 @@ they tend to have more room.  Which airlines should these people favor?
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=6}
 
 carrier = c("AA", "AS", "B6", "CO", "DL", "EV", "F9", "FL", "MQ", "OO", "UA", "US", "WN", "XE", "YV")
-airline = c("American Airlines", "Alaska Airlines", "Jet Blue", "Cobaltair LTD", "Delta", "Express Jet", "Frontier Airlines", "AirTran", "Envoy Air", "SkyWest", "United Airlines", "US Airways", "SouthWest", "Deluxe Public Charter", "Mesa Airlines")
+airline = c("American Airlines", "Alaska Airlines", "Jet Blue", "Continental", "Delta", "Express Jet", "Frontier Airlines", "AirTran", "Envoy Air", "SkyWest", "United Airlines", "US Airways", "SouthWest", "Deluxe Public Charter", "Mesa Airlines")
 
 flight_code <- data.frame(carrier, airline)
 
